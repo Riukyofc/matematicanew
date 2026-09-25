@@ -1,0 +1,174 @@
+rules_version = '2';
+
+// ============================================================
+// Saberes em Conexão — Firestore Security Rules v2
+// ============================================================
+// Para aplicar: Firebase Console → Firestore → Regras → Colar → Publicar
+// ============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Funções auxiliares ──
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function isTeacher() {
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'TEACHER';
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN';
+    }
+
+    function isTeacherOrAdmin() {
+      return isTeacher() || isAdmin();
+    }
+
+    // ════════════════════════════════════════════════════════════
+    // USERS — Perfis de usuário
+    // ════════════════════════════════════════════════════════════
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+
+      // Permite criar perfil com role STUDENT ou TEACHER
+      allow create: if isOwner(userId) &&
+        request.resource.data.keys().hasAll(['name', 'email', 'role']) &&
+        (request.resource.data.role == 'STUDENT' || request.resource.data.role == 'TEACHER');
+
+      // Usuário pode atualizar seu próprio perfil (exceto role e email)
+      allow update: if isOwner(userId) &&
+        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'email']));
+
+      // Admin pode alterar qualquer campo
+      allow update: if isAdmin();
+
+      allow delete: if isAdmin();
+
+      // ── Sub-coleção: Resultados de Quiz ──
+      match /quizResults/{resultId} {
+        allow read: if isOwner(userId) || isTeacherOrAdmin();
+        allow create: if isOwner(userId);
+        allow update, delete: if false;
+      }
+
+      // ── Sub-coleção: Notas do Aluno ──
+      match /notes/{noteId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // ── Sub-coleção: Conquistas ──
+      match /achievements/{achievementId} {
+        allow read: if isOwner(userId) || isTeacherOrAdmin();
+        allow create: if isOwner(userId);
+        allow update, delete: if false;
+      }
+
+      // ── Sub-coleção: Infrações ──
+      match /infractions/{infractionId} {
+        allow read: if isOwner(userId) || isTeacherOrAdmin();
+        allow create: if isOwner(userId) || isTeacherOrAdmin();
+        allow update, delete: if isTeacherOrAdmin();
+      }
+
+      // ── Sub-coleção: Desafio Diário ──
+      match /dailyChallenge/{dateId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    // ════════════════════════════════════════════════════════════
+    // TRACKS — Trilhas de aprendizado
+    // ════════════════════════════════════════════════════════════
+    match /tracks/{trackId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isTeacherOrAdmin();
+    }
+
+    // ════════════════════════════════════════════════════════════
+    // LESSONS — Aulas
+    // ════════════════════════════════════════════════════════════
+    match /lessons/{lessonId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isTeacherOrAdmin();
+    }
+
+    // ════════════════════════════════════════════════════════════
+    // QUIZZES — Quizzes vinculados a aulas
+    // ════════════════════════════════════════════════════════════
+    match /quizzes/{quizId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isTeacherOrAdmin();
+
+      match /questions/{questionId} {
+        allow read: if isAuthenticated();
+        allow create, update, delete: if isTeacherOrAdmin();
+      }
+    }
+
+    // ════════════════════════════════════════════════════════════
+    // CLASSES — Turmas
+    // ════════════════════════════════════════════════════════════
+    match /classes/{classId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isTeacherOrAdmin();
+    }
+
+    // ════════════════════════════════════════════════════════════
+    // ACHIEVEMENTS_CATALOG — Catálogo de conquistas
+    // ════════════════════════════════════════════════════════════
+    match /achievementsCatalog/{achievementId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ════════════════════════════════════════════════════════════
+    // GLOBAL_STATS — Estatísticas globais (leaderboard)
+    // ════════════════════════════════════════════════════════════
+    match /globalStats/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    // ════════════════════════════════════════════════════════════
+    // SETTINGS — Configurações da plataforma
+    // ════════════════════════════════════════════════════════════
+    match /settings/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacherOrAdmin();
+    }
+
+    // ════════════════════════════════════════════════════════════
+    // FORMULAS — Fórmulas customizadas
+    // ════════════════════════════════════════════════════════════
+    match /formulas/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacherOrAdmin();
+    }
+
+    // ════════════════════════════════════════════════════════════
+    // SHOP ITEMS — Itens da lojinha
+    // ════════════════════════════════════════════════════════════
+    match /shopItems/{itemId} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacherOrAdmin();
+    }
+
+    // ════════════════════════════════════════════════════════════
+    // DUELS — Arena Matemática
+    // ════════════════════════════════════════════════════════════
+    match /duels/{duelId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isTeacherOrAdmin();
+    }
+  }
+}
