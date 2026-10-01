@@ -79,7 +79,7 @@ export default function CourseBuilder({ tracks, lessons, onRefresh }: CourseBuil
         </div>
 
         {isCreatingTrack && (
-          <div className="card p-4 border-l-4 border-indigo-500 animate-fade-down">
+          <div className="card p-4 border-l-4 border-indigo-500 animate-fade-up">
             <h4 className="text-xs font-bold uppercase mb-3 text-indigo-500">Nova Trilha</h4>
             <div className="space-y-3">
               <input placeholder="Título (Ex: Álgebra)" value={newTrack.title} onChange={e => setNewTrack({...newTrack, title: e.target.value})} className={inputCls} />
@@ -88,7 +88,7 @@ export default function CourseBuilder({ tracks, lessons, onRefresh }: CourseBuil
                 <input placeholder="Ícone (Emoji)" value={newTrack.icon} onChange={e => setNewTrack({...newTrack, icon: e.target.value})} className={`${inputCls} w-20 text-center`} />
                 <input type="number" placeholder="Ordem" value={newTrack.order} onChange={e => setNewTrack({...newTrack, order: Number(e.target.value)})} className={`${inputCls} flex-1`} />
               </div>
-              <button disabled={loading} onClick={handleCreateTrack} className="w-full py-2 bg-indigo-500 text-white rounded-xl font-bold text-sm hover:bg-indigo-600">
+              <button disabled={loading} onClick={handleCreateTrack} className="w-full py-2 bg-indigo-500 text-white rounded-xl font-bold text-sm hover:bg-indigo-600 hover-scale">
                 Salvar Trilha
               </button>
             </div>
@@ -148,7 +148,7 @@ export default function CourseBuilder({ tracks, lessons, onRefresh }: CourseBuil
 
             <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
               {isCreatingLesson && (
-                <div className="card p-5 border-l-4 border-indigo-500 mb-6 animate-fade-down">
+                <div className="card p-5 border-l-4 border-indigo-500 mb-6 animate-fade-up">
                   <h4 className="font-bold mb-4 flex items-center gap-2"><span>📝</span> Adicionar Nova Aula</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <input placeholder="Título da Aula" value={newLesson.title} onChange={e => setNewLesson({...newLesson, title: e.target.value})} className={inputCls} />
@@ -166,7 +166,7 @@ export default function CourseBuilder({ tracks, lessons, onRefresh }: CourseBuil
                       Publicado (Visível aos alunos)
                     </label>
                   </div>
-                  <button disabled={loading} onClick={handleCreateLesson} className="w-full py-3 bg-indigo-500 text-white rounded-xl font-bold text-sm hover:bg-indigo-600">
+                  <button disabled={loading} onClick={handleCreateLesson} className="w-full py-3 bg-indigo-500 text-white rounded-xl font-bold text-sm hover:bg-indigo-600 hover-scale">
                     Salvar Aula no Banco
                   </button>
                 </div>
@@ -208,3 +208,4 @@ export default function CourseBuilder({ tracks, lessons, onRefresh }: CourseBuil
     </div>
   );
 }
+

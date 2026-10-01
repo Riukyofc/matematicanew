@@ -78,7 +78,21 @@ export default function StudyTimer() {
   };
 
   return (
-    <div className="card p-4" style={{ borderTop: `3px solid ${mode === "study" ? "var(--color-primary)" : "var(--color-success)"}` }}>
+    <div className={`card p-4 hover-lift ${running ? (mode === "study" ? "pulsing-study" : "pulsing-break") : ""}`} style={{ borderTop: `3px solid ${mode === "study" ? "var(--color-primary)" : "var(--color-success)"}` }}>
+      <style>{`
+        @keyframes pulseBorderStudy {
+          0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-primary) 50%, transparent); }
+          70% { box-shadow: 0 0 0 10px transparent; }
+          100% { box-shadow: 0 0 0 0 transparent; }
+        }
+        @keyframes pulseBorderBreak {
+          0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-success) 50%, transparent); }
+          70% { box-shadow: 0 0 0 10px transparent; }
+          100% { box-shadow: 0 0 0 0 transparent; }
+        }
+        .pulsing-study { animation: pulseBorderStudy 2s infinite; border-color: var(--color-primary); }
+        .pulsing-break { animation: pulseBorderBreak 2s infinite; border-color: var(--color-success); }
+      `}</style>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className="text-xl">{mode === "study" ? "📖" : "☕"}</span>
@@ -94,10 +108,10 @@ export default function StudyTimer() {
 
       {/* Presets */}
       {!running && (
-        <div className="flex gap-1.5 mb-3">
+        <div className="flex gap-1.5 mb-3 stagger-children">
           {PRESETS.map((p, i) => (
             <button key={p.label} onClick={() => { setPreset(i); setMode("study"); setTime(p.mins * 60); }}
-              className="flex-1 py-1.5 rounded-lg text-[11px] font-bold cursor-pointer transition-all"
+              className="flex-1 py-1.5 rounded-lg text-[11px] font-bold cursor-pointer transition-all hover-lift"
               style={{
                 background: i === preset ? "var(--color-primary-bg)" : "var(--color-bg)",
                 color: i === preset ? "var(--color-primary)" : "var(--color-text-muted)",

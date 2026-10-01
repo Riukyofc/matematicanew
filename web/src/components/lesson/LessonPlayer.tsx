@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useMinTimeOnPage } from "@/hooks/useMinTimeOnPage";
+import { sounds } from "@/lib/soundEngine";
 
 // ============================================================
 // Tipos
@@ -69,6 +70,15 @@ export default function LessonPlayer({ lesson, onStartQuiz }: LessonPlayerProps)
     useMinTimeOnPage(lesson.minWatchTimeSec);
 
   const [isHoveringQuiz, setIsHoveringQuiz] = useState(false);
+
+  const hasPlayedSoundRef = useRef(false);
+
+  useEffect(() => {
+    if (isUnlocked && !hasPlayedSoundRef.current) {
+      sounds.playCorrect();
+      hasPlayedSoundRef.current = true;
+    }
+  }, [isUnlocked]);
 
   const embedUrl = useMemo(
     () => getEmbedUrl(lesson.videoUrl, lesson.videoProvider),
@@ -288,7 +298,7 @@ export default function LessonPlayer({ lesson, onStartQuiz }: LessonPlayerProps)
 
         {/* ── Conteúdo de Apoio ── */}
         <div
-          className="animate-float-in"
+          className="animate-fade-in"
           style={{ animationDelay: "0.4s" }}
         >
           <div className="flex items-center gap-3 mb-4">

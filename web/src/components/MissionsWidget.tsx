@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getDailyMissions, checkMissionProgress, type Mission } from "@/lib/missions";
 import { getMissionStats, claimMissionReward } from "@/lib/firebase";
@@ -13,6 +13,12 @@ export default function MissionsWidget() {
   const [missions, setMissions] = useState<Mission[]>([]);
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [confetti, setConfetti] = useState(false);
+
+  const COLORS = ["#e17055", "#fdcb6e", "#00b894", "#0984e3", "#6c5ce7", "#fd79a8"];
+  const pieces = useMemo(() => Array.from({ length: 16 }, (_, i) => ({
+    id: i, color: COLORS[i % COLORS.length], left: `${5 + Math.random() * 90}%`, delay: `${Math.random() * 0.4}s`,
+  })), []);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -28,6 +34,8 @@ export default function MissionsWidget() {
     if (!user) return;
     try {
       await claimMissionReward(user.uid, m.id, m.xpReward, m.coinReward, m.period);
+      setConfetti(true);
+      setTimeout(() => setConfetti(false), 1800);
       addToast("achievement", `Missão cumprida! +${m.xpReward} XP e +${m.coinReward} moedas`);
       load(); // recarrega para atualizar o botão
     } catch (e) {
@@ -57,7 +65,12 @@ export default function MissionsWidget() {
   };
 
   return (
-    <div className="card p-4 relative overflow-hidden">
+    <div className="card p-4 relative overflow-hidden hover-lift">
+      {confetti && (
+        <div className="confetti-container">
+          {pieces.map(p => <div key={p.id} className="confetti-piece" style={{ left: p.left, top: "30%", backgroundColor: p.color, animationDelay: p.delay }} />)}
+        </div>
+      )}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <span className="text-xl">🎯</span>
@@ -73,14 +86,14 @@ export default function MissionsWidget() {
         </Link>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-3 stagger-children">
         {missions.map(m => {
           const progress = getProgress(m);
           const isClaimed = claimed.includes(m.id);
           const pct = Math.min((progress.current / m.target) * 100, 100);
 
           return (
-            <div key={m.id} className="mission-card flex items-center gap-3 p-3 rounded-xl border border-[var(--color-border)]" style={{ background: "var(--color-surface)" }}>
+            <div key={m.id} className="mission-card flex items-center gap-3 p-3 rounded-xl border border-[var(--color-border)] hover-lift" style={{ background: "var(--color-surface)" }}>
               <div className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl text-xl" style={{ background: "var(--color-bg)" }}>
                 {m.emoji}
               </div>

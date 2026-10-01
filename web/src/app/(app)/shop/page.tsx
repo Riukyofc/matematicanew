@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { ShopItem, getShopItems, purchaseItem, equipItem, unequipItem } from "@/lib/firebase";
 import { useToast } from "@/components/Toast";
+import { sounds } from "@/lib/soundEngine";
 
 const RARITY_CONFIG: Record<string, { label: string; class: string; bgClass: string }> = {
   common: { label: "Comum", class: "rarity-common", bgClass: "bg-slate-500/5 border-slate-500/10" },
@@ -29,7 +30,7 @@ export default function ShopPage() {
   const loadItems = useCallback(async () => {
     try {
       const data = await getShopItems();
-      setItems(data);
+      setItems(data.filter(item => item.isActive !== false));
     } catch (err) {
       console.error(err);
     }
@@ -46,21 +47,27 @@ export default function ShopPage() {
   const ownedItems = (profile.ownedItems as string[]) || [];
 
   const handlePurchase = async (item: ShopItem) => {
+    sounds.playClick();
     setActionLoading(item.id);
     try {
       const res = await purchaseItem(user.uid, item);
       addToast(res.success ? "achievement" : "error", res.message);
       if (res.success) {
+        sounds.playWin();
         await refreshProfile();
         loadItems();
+      } else {
+        sounds.playWrong();
       }
     } catch {
+      sounds.playWrong();
       addToast("error", "Erro ao comprar item");
     }
     setActionLoading(null);
   };
 
   const handleEquip = async (item: ShopItem) => {
+    sounds.playClick();
     setActionLoading(item.id);
     try {
       await equipItem(user.uid, item);
@@ -73,6 +80,7 @@ export default function ShopPage() {
   };
 
   const handleUnequip = async (category: "theme" | "border" | "title") => {
+    sounds.playClick();
     try {
       await unequipItem(user.uid, category);
       addToast("info", "Item desequipado");
@@ -170,7 +178,7 @@ export default function ShopPage() {
                   )}
                 </div>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
                   {catItems.map(item => {
                     const isOwned = ownedItems.includes(item.id);
                     const isEquipped = profile.equippedTheme === item.preview || profile.equippedBorder === item.preview || profile.equippedTitle === item.preview;
@@ -181,7 +189,7 @@ export default function ShopPage() {
                     return (
                       <div 
                         key={item.id} 
-                        className={`glass-card p-5 flex flex-col relative overflow-hidden group ${
+                        className={`glass-card p-5 flex flex-col relative overflow-hidden group hover-lift animate-bounce-in ${
                           isEquipped ? "ring-2 ring-emerald-500/50" : ""
                         }`}
                       >

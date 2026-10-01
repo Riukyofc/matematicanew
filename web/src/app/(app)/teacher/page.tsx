@@ -198,6 +198,7 @@ export default function TeacherPage() {
     setSelectedLesson(lessonId);
     setQuizQuestions([]);
     setQuizId("");
+    if (!lessonId) return;
     try {
       const quizzes = await getQuizzesByLessonId(lessonId);
       if (quizzes.length > 0) {
@@ -307,7 +308,7 @@ export default function TeacherPage() {
   // ─── RENDER ───
   const inputCls = "w-full px-4 py-3 rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)] text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition shadow-sm";
   const labelCls = "block text-[10px] font-bold text-[var(--color-text-muted)] mb-1.5 uppercase tracking-wider";
-  const btnSmCls = "px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer";
+  const btnSmCls = "px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer hover-scale";
 
   return (
     <div className="max-w-5xl mx-auto py-6 animate-fade-up">
@@ -327,7 +328,7 @@ export default function TeacherPage() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 hover-scale
               ${activeTab === tab.id ? "tab-active" : "tab-inactive"}`}
           >
             <span>{tab.icon}</span>
@@ -354,7 +355,7 @@ export default function TeacherPage() {
           {activeTab === "tracks" && (
             <div className="space-y-6 animate-fade-in">
               {/* Create Track */}
-              <div className="p-6 rounded-2xl glass-card-static">
+              <div className="p-6 rounded-2xl glass-card-static animate-fade-up">
                 <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><span>➕</span> Nova Trilha</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                   <div>
@@ -413,7 +414,7 @@ export default function TeacherPage() {
               </div>
 
               {/* Create Lesson */}
-              <div className="p-6 rounded-2xl glass-card-static">
+              <div className="p-6 rounded-2xl glass-card-static animate-fade-up">
                 <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><span>🎬</span> Nova Aula</h3>
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -516,7 +517,7 @@ export default function TeacherPage() {
           {activeTab === "quizzes" && (
             <div className="space-y-6 animate-fade-in">
               {/* Select Lesson */}
-              <div className="p-6 rounded-2xl glass-card-static">
+              <div className="p-6 rounded-2xl glass-card-static animate-fade-up">
                 <h3 className="text-lg font-bold mb-4">Gerenciar Quiz</h3>
                 <div className="mb-4">
                   <label className={labelCls}>Selecione uma aula</label>
@@ -546,7 +547,7 @@ export default function TeacherPage() {
               {/* Add Questions */}
               {quizId && (
                 <>
-                  <div className="p-6 rounded-2xl glass-card-static">
+                  <div className="p-6 rounded-2xl glass-card-static animate-fade-up">
                     <h3 className="text-lg font-bold mb-4">Adicionar Pergunta</h3>
                     <div className="space-y-4">
                       <div>
@@ -637,7 +638,7 @@ export default function TeacherPage() {
           {/* ═══ ANNOUNCEMENTS TAB ═══ */}
           {activeTab === "announcements" && (
             <div className="space-y-6 animate-fade-in">
-              <div className="p-6 rounded-2xl glass-card-static">
+              <div className="p-6 rounded-2xl glass-card-static animate-fade-up">
                 <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><span>📢</span> Novo Aviso</h3>
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -697,7 +698,7 @@ export default function TeacherPage() {
           {/* ═══ FORMULAS TAB ═══ */}
           {activeTab === "formulas" && (
             <div className="space-y-6 animate-fade-in">
-              <div className="p-6 rounded-2xl glass-card-static">
+              <div className="p-6 rounded-2xl glass-card-static animate-fade-up">
                 <h3 className="text-lg font-bold mb-4">Adicionar Fórmula</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                   <div>
@@ -735,7 +736,7 @@ export default function TeacherPage() {
           {/* ═══ SETTINGS TAB ═══ */}
           {activeTab === "settings" && (
             <div className="space-y-6 animate-fade-in">
-              <div className="p-6 rounded-2xl glass-card-static">
+              <div className="p-6 rounded-2xl glass-card-static animate-fade-up">
                 <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
                   <svg className="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   Configurações da Plataforma
@@ -755,7 +756,7 @@ export default function TeacherPage() {
                 <button onClick={handleSaveSettings} className={`${btnSmCls} btn-primary`}>Salvar Configurações</button>
               </div>
 
-              <div className="p-6 rounded-2xl glass-card-static">
+              <div className="p-6 rounded-2xl glass-card-static animate-fade-up">
                 <h3 className="text-lg font-bold mb-4">ℹ️ Guia do Professor</h3>
                 <ul className="space-y-3 text-sm text-[var(--color-text-muted)]">
                   <li className="flex items-start gap-2">
@@ -795,3 +796,5 @@ export default function TeacherPage() {
     </div>
   );
 }
+
+

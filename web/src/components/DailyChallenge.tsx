@@ -77,7 +77,7 @@ export default function DailyChallenge() {
   if (loading) return <div className="card p-4"><div className="h-32 skeleton" /></div>;
 
   return (
-    <div className="card p-4 relative overflow-hidden" style={{ borderTop: done ? undefined : "3px solid var(--color-coins)" }}>
+    <div className="card p-4 relative overflow-hidden hover-lift" style={{ borderTop: done ? undefined : "3px solid var(--color-coins)" }}>
       {confetti && (
         <div className="confetti-container">
           {pieces.map(p => <div key={p.id} className="confetti-piece" style={{ left: p.left, top: "30%", backgroundColor: p.color, animationDelay: p.delay }} />)}
@@ -110,10 +110,10 @@ export default function DailyChallenge() {
       ) : (
         <>
           <p className="text-sm font-bold mb-3 p-2.5 rounded-lg" style={{ background: "var(--color-bg)" }}>{q.text}</p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2 stagger-children">
             {q.options.map((o, i) => (
               <button key={i} onClick={() => answer(i)} disabled={sel !== null}
-                className="px-3 py-2.5 rounded-xl text-sm font-bold cursor-pointer transition-all"
+                className="px-3 py-2.5 rounded-xl text-sm font-bold cursor-pointer transition-all hover-lift"
                 style={{
                   background: sel === i ? (i === q.correctIndex ? "var(--color-success-bg)" : "var(--color-error-bg)") : "var(--color-bg)",
                   color: sel === i ? (i === q.correctIndex ? "var(--color-success)" : "var(--color-error)") : "var(--color-text)",

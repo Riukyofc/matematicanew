@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { logoutUser } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
@@ -10,6 +11,13 @@ export default function ProfilePage() {
   const { user, profile } = useAuth();
   const router = useRouter();
   const { addToast } = useToast();
+  const [xpWidth, setXpWidth] = useState(0);
+
+  useEffect(() => {
+    if (profile?.xp) {
+      setXpWidth(((Number(profile.xp) % 500) / 500) * 100);
+    }
+  }, [profile?.xp]);
 
   if (!user || !profile) return null;
 
@@ -92,7 +100,7 @@ export default function ProfilePage() {
           { label: "Moedas", value: coins, icon: "🟡", color: "text-yellow-500" },
           { label: "Estudo", value: `${studyMin}m`, icon: "📚", color: "text-cyan-500" },
         ].map((s, i) => (
-          <div key={s.label} className="stat-card p-3 text-center animate-fade-up" style={{ animationDelay: `${0.1 + i * 0.04}s` }}>
+          <div key={s.label} className="stat-card p-3 text-center animate-fade-up transition-transform duration-300 hover:scale-110" style={{ animationDelay: `${0.1 + i * 0.1}s`, animationFillMode: "both" }}>
             <div className="text-lg mb-0.5">{s.icon}</div>
             <p className={`text-lg font-black ${s.color}`}>{s.value}</p>
             <p className="text-[8px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">{s.label}</p>
@@ -107,7 +115,7 @@ export default function ProfilePage() {
           <p className="text-sm font-bold text-[var(--color-accent)]">{xp % 500}/500 XP</p>
         </div>
         <div className="progress-bar progress-bar-lg">
-          <div className="progress-bar-fill" style={{ width: `${((xp % 500) / 500) * 100}%` }} />
+          <div className="progress-bar-fill transition-all duration-1000 ease-out" style={{ width: `${xpWidth}%` }} />
         </div>
         <p className="text-[10px] text-[var(--color-text-muted)] mt-2">Faltam {500 - (xp % 500)} XP para o nível {level + 1}</p>
       </div>

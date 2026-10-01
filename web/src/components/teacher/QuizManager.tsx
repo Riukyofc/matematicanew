@@ -20,6 +20,7 @@ export default function QuizManager({ lessons }: QuizManagerProps) {
     setLoading(true);
     setQuizId(null);
     setQuestions([]);
+    if (!lessonId) { setLoading(false); return; }
     try {
       const quizzes = await getQuizzesByLessonId(lessonId);
       if (quizzes.length > 0) {
@@ -100,11 +101,11 @@ export default function QuizManager({ lessons }: QuizManagerProps) {
         </select>
 
         {selectedLessonId && !loading && !quizId && (
-          <div className="mt-8 text-center p-6 bg-[var(--color-bg-secondary)] rounded-2xl border border-dashed border-[var(--color-border)]">
+          <div className="mt-8 text-center animate-fade-up p-6 bg-[var(--color-bg-secondary)] rounded-2xl border border-dashed border-[var(--color-border)]">
             <span className="text-4xl mb-4 block">❓</span>
             <p className="font-bold mb-2">Sem Quiz</p>
             <p className="text-xs text-[var(--color-text-muted)] mb-4">Esta aula ainda não tem um quiz associado.</p>
-            <button onClick={handleCreateQuiz} className="w-full py-2 bg-indigo-500 text-white font-bold rounded-xl text-sm shadow-md hover:bg-indigo-600 transition-colors">
+            <button onClick={handleCreateQuiz} className="w-full py-2 bg-indigo-500 text-white font-bold rounded-xl text-sm shadow-md hover:bg-indigo-600 transition-colors hover-scale">
               Criar Quiz Agora
             </button>
           </div>
@@ -134,7 +135,7 @@ export default function QuizManager({ lessons }: QuizManagerProps) {
           </div>
         ) : (
           <div className="flex-1 flex flex-col h-full overflow-hidden">
-            <div className="mb-6 card p-5 border-l-4 border-emerald-500 shrink-0">
+            <div className="mb-6 card animate-fade-up p-5 border-l-4 border-emerald-500 shrink-0">
               <h4 className="font-bold mb-4 flex items-center gap-2"><span>➕</span> Adicionar Pergunta</h4>
               <input 
                 placeholder="Ex: Qual é a raiz quadrada de 144?" 
@@ -166,7 +167,7 @@ export default function QuizManager({ lessons }: QuizManagerProps) {
                   <span className="text-xs font-bold text-[var(--color-text-muted)]">XP/Pontos:</span>
                   <input type="number" value={newQuestion.points} onChange={e => setNewQuestion({...newQuestion, points: Number(e.target.value)})} className="w-16 bg-transparent outline-none font-bold text-indigo-500" />
                 </div>
-                <button disabled={loading} onClick={handleAddQuestion} className="flex-1 py-2.5 bg-emerald-500 text-white font-bold rounded-xl text-sm shadow-md hover:bg-emerald-600 transition-colors">
+                <button disabled={loading} onClick={handleAddQuestion} className="flex-1 py-2.5 bg-emerald-500 text-white font-bold rounded-xl text-sm shadow-md hover:bg-emerald-600 transition-colors hover-scale">
                   Salvar Pergunta
                 </button>
               </div>
@@ -203,3 +204,5 @@ export default function QuizManager({ lessons }: QuizManagerProps) {
     </div>
   );
 }
+
+

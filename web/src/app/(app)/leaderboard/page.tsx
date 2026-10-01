@@ -59,8 +59,8 @@ export default function LeaderboardPage() {
       {!loading && top3.length >= 3 && (
         <div className="flex items-end justify-center gap-3 mb-8 animate-fade-up" style={{ animationDelay: "0.15s" }}>
           {/* 2nd Place */}
-          <div className="flex flex-col items-center w-28">
-            <div className={`w-14 h-14 rounded-full bg-gradient-to-br from-slate-300 to-slate-400 text-white flex items-center justify-center font-bold text-lg shadow-md mb-2 ${top3[1].equippedBorder || ''}`}>
+          <div className="flex flex-col items-center w-28 transition-transform hover:-translate-y-2 duration-300">
+            <div className={`w-14 h-14 rounded-full bg-gradient-to-br from-slate-300 to-slate-400 text-white flex items-center justify-center font-bold text-lg shadow-[0_0_15px_rgba(148,163,184,0.5)] hover-glow animate-pulse mb-2 ${top3[1].equippedBorder || ''}`}>
               {top3[1].name.charAt(0).toUpperCase()}
             </div>
             <p className="text-xs font-bold truncate w-full text-center">{top3[1].name}</p>
@@ -71,9 +71,9 @@ export default function LeaderboardPage() {
           </div>
 
           {/* 1st Place */}
-          <div className="flex flex-col items-center w-32">
+          <div className="flex flex-col items-center w-32 transition-transform hover:-translate-y-2 duration-300">
             <div className="relative mb-2">
-              <div className={`w-16 h-16 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 text-white flex items-center justify-center font-bold text-xl shadow-lg animate-glow-pulse ${top3[0].equippedBorder || ''}`}>
+              <div className={`w-16 h-16 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 text-white flex items-center justify-center font-bold text-xl shadow-[0_0_20px_rgba(250,204,21,0.6)] hover-glow animate-pulse ${top3[0].equippedBorder || ''}`}>
                 {top3[0].name.charAt(0).toUpperCase()}
               </div>
               <div className="absolute -top-3 -right-1 text-xl animate-float">👑</div>
@@ -89,8 +89,8 @@ export default function LeaderboardPage() {
           </div>
 
           {/* 3rd Place */}
-          <div className="flex flex-col items-center w-28">
-            <div className={`w-14 h-14 rounded-full bg-gradient-to-br from-orange-600 to-orange-700 text-white flex items-center justify-center font-bold text-lg shadow-md mb-2 ${top3[2].equippedBorder || ''}`}>
+          <div className="flex flex-col items-center w-28 transition-transform hover:-translate-y-2 duration-300">
+            <div className={`w-14 h-14 rounded-full bg-gradient-to-br from-orange-600 to-orange-700 text-white flex items-center justify-center font-bold text-lg shadow-[0_0_15px_rgba(234,88,12,0.5)] hover-glow animate-pulse mb-2 ${top3[2].equippedBorder || ''}`}>
               {top3[2].name.charAt(0).toUpperCase()}
             </div>
             <p className="text-xs font-bold truncate w-full text-center">{top3[2].name}</p>
@@ -125,7 +125,7 @@ export default function LeaderboardPage() {
                   key={p.uid} 
                   className={`flex items-center gap-4 p-3.5 rounded-xl transition-all duration-300
                     ${isYou ? "bg-[var(--color-accent-subtle)] border border-[var(--color-accent-glow)]" : "bg-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)]"} animate-fade-up`}
-                  style={{ animationDelay: `${0.3 + i * 0.03}s` }}
+                  style={{ animationDelay: `${0.2 + i * 0.1}s`, animationFillMode: "both" }}
                 >
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-black bg-[var(--color-bg-card)] text-[var(--color-text-muted)] shrink-0">
                     {i + 4}

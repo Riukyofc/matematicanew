@@ -94,7 +94,7 @@ export default function LessonPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-6">
+    <div className="max-w-4xl mx-auto py-6 animate-fade-in">
       <div className="mb-6">
         <button 
           onClick={() => router.push("/dashboard")}

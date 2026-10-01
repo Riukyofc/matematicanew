@@ -95,9 +95,9 @@ export default function ShopManager() {
       {loading ? (
         <p className="text-center py-8">Carregando estoque...</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 stagger-children">
           {items.map(item => (
-            <div key={item.id} className={`p-4 rounded-xl border flex flex-col transition-all ${item.isActive ? 'bg-[var(--color-bg-secondary)] border-[var(--color-border)]' : 'bg-red-500/5 border-red-500/20 opacity-70'}`}>
+            <div key={item.id} className={`p-4 rounded-xl border flex flex-col transition-all hover-lift animate-bounce-in ${item.isActive ? 'bg-[var(--color-bg-secondary)] border-[var(--color-border)]' : 'bg-red-500/5 border-red-500/20 opacity-70'}`}>
               <div className="flex items-center justify-between mb-2">
                 <span className={`text-[9px] font-bold px-2 py-1 rounded uppercase bg-[var(--color-bg)]`}>
                   {item.category === 'theme' ? 'Tema' : item.category === 'border' ? 'Borda' : 'Título'}
