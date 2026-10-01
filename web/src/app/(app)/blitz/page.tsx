@@ -269,10 +269,10 @@ export default function BlitzPage() {
               {/* Score & Streak */}
               <div className="flex flex-col gap-1">
                 <div className="text-sm font-bold" style={{ color: "var(--color-text-muted)" }}>PONTOS</div>
-                <div className="text-3xl font-black" style={{ color: "var(--color-text)" }}>{score}</div>
+                <div className="blitz-score" style={{ color: "var(--color-text)" }}>{score}</div>
                 
                 {streak > 1 && (
-                  <div className="text-xs font-bold animate-pop-in flex items-center gap-1" style={{ color: "var(--color-error)" }}>
+                  <div className="combo-badge animate-bounce-in flex items-center gap-1" style={{ color: "var(--color-error)", backgroundColor: "var(--color-error-bg)" }}>
                     🔥 {streak}x COMBO
                   </div>
                 )}
@@ -293,7 +293,7 @@ export default function BlitzPage() {
                   />
                 </svg>
                 <div 
-                  className={`text-3xl font-black absolute ${timeLeft <= 10 ? 'animate-pulse' : ''}`}
+                  className={`text-3xl font-black absolute ${timeLeft <= 10 ? 'animate-heartbeat' : ''}`}
                   style={{ color: timeLeft <= 10 ? "var(--color-error)" : "var(--color-text)" }}
                 >
                   {timeLeft}
@@ -304,7 +304,7 @@ export default function BlitzPage() {
             {/* Question Card */}
             <div 
               className={`card-game flex-1 flex flex-col justify-center transition-all duration-300 ${
-                feedback === "correct" ? "border-4 scale-105" : feedback === "wrong" ? "border-4 animate-shake" : ""
+                feedback === "correct" ? "border-4 scale-105 blitz-flash-correct" : feedback === "wrong" ? "border-4 animate-shake blitz-flash-wrong" : ""
               }`}
               style={{ 
                 borderColor: feedback === "correct" ? "var(--color-success)" : feedback === "wrong" ? "var(--color-error)" : "var(--color-border)"
@@ -350,7 +350,7 @@ export default function BlitzPage() {
                       key={i}
                       disabled={isProcessing}
                       onClick={() => handleOptionClick(i)}
-                      className="card-flat py-5 text-xl font-bold transition-all active:scale-95"
+                      className={`card-flat py-5 text-xl font-bold transition-all active:scale-95 ${!feedback && 'hover-scale'}`}
                       style={btnStyle}
                     >
                       {opt}
@@ -364,15 +364,15 @@ export default function BlitzPage() {
 
         {/* --- RESULT SCREEN --- */}
         {screen === "result" && (
-          <div className="flex-1 flex flex-col items-center justify-center animate-fade-up gap-6 text-center">
+          <div className="flex-1 flex flex-col items-center justify-center animate-bounce-in gap-6 text-center">
             
-            <div className="text-6xl mb-2 animate-bounce">💥</div>
+            <div className="text-6xl mb-2 animate-wiggle">💥</div>
             <h1 className="text-4xl font-black italic uppercase" style={{ color: "var(--color-error)" }}>
               Tempo Esgotado!
             </h1>
 
             {isNewRecord && (
-              <div className="badge-primary px-4 py-2 text-lg font-bold animate-pulse" style={{ backgroundColor: "var(--color-warning)", color: "#000" }}>
+              <div className="new-record text-3xl font-black mb-2 animate-tada">
                 🎉 NOVO RECORDE! 🎉
               </div>
             )}
@@ -406,15 +406,15 @@ export default function BlitzPage() {
             </div>
 
             {/* Rewards */}
-            <div className="flex gap-4 w-full justify-center">
-              <div className="card-flat px-6 py-3 flex items-center gap-2" style={{ backgroundColor: "var(--color-info-bg)" }}>
+            <div className="flex gap-4 w-full justify-center stagger-children">
+              <div className="card-flat px-6 py-3 flex items-center gap-2 hover-lift" style={{ backgroundColor: "var(--color-info-bg)" }}>
                 <span className="text-2xl">✨</span>
                 <div className="flex flex-col text-left">
                   <span className="text-xs font-bold" style={{ color: "var(--color-text-muted)" }}>XP Ganho</span>
                   <span className="font-bold" style={{ color: "var(--color-info)" }}>+{xpEarned} XP</span>
                 </div>
               </div>
-              <div className="card-flat px-6 py-3 flex items-center gap-2" style={{ backgroundColor: "var(--color-coins-bg)" }}>
+              <div className="card-flat px-6 py-3 flex items-center gap-2 hover-lift" style={{ backgroundColor: "var(--color-warning-bg)" }}>
                 <span className="text-2xl">🪙</span>
                 <div className="flex flex-col text-left">
                   <span className="text-xs font-bold" style={{ color: "var(--color-text-muted)" }}>Moedas</span>

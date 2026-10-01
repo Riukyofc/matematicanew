@@ -768,3 +768,58 @@ export async function seedFirestoreData() {
 
   return { success: true, message: `Seed completo! ${tracks.length} trilhas, ${lessons.length} aulas, ${quizData.length} quizzes, ${shopItems.length} itens da loja.` };
 }
+
+
+// ════════════════════ ANNOUNCEMENTS ════════════════════
+export interface Announcement {
+  id: string;
+  title: string;
+  message: string;
+  priority: "info" | "warning" | "urgent";
+  createdAt: unknown;
+}
+
+export async function getAnnouncements(): Promise<Announcement[]> {
+  const q = query(collection(db, "announcements"), orderBy("createdAt", "desc"));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Announcement));
+}
+
+export async function createAnnouncement(data: { title: string; message: string; priority: string }) {
+  const ref = await addDoc(collection(db, "announcements"), { ...data, createdAt: serverTimestamp() });
+  return ref.id;
+}
+
+export async function deleteAnnouncement(id: string) {
+  await deleteDoc(doc(db, "announcements", id));
+}
+
+// ════════════════════ TEACHER: STUDENT MANAGEMENT ════════════════════
+
+export async function updateStudentXP(uid: string, amount: number) {
+  await updateDoc(doc(db, "users", uid), { xp: increment(amount) });
+}
+
+export async function updateStudentCoins(uid: string, amount: number) {
+  await updateDoc(doc(db, "users", uid), { coins: increment(amount) });
+}
+
+export async function resetStudentProgress(uid: string) {
+  await updateDoc(doc(db, "users", uid), {
+    xp: 0, level: 1, streak: 0, bestStreak: 0,
+    quizzesCompleted: 0, perfectQuizzes: 0, lessonsCompleted: 0,
+    totalStudyMinutes: 0, coins: 0,
+    duelsWon: 0, duelsLost: 0, duelsPlayed: 0,
+  });
+}
+
+// ════════════════════ TEACHER: SITE BRANDING ════════════════════
+
+export async function getSiteConfig() {
+  const snap = await getDoc(doc(db, "settings", "siteConfig"));
+  return snap.exists() ? snap.data() : null;
+}
+
+export async function saveSiteConfig(data: Record<string, unknown>) {
+  await setDoc(doc(db, "settings", "siteConfig"), { ...data, updatedAt: serverTimestamp() }, { merge: true });
+}

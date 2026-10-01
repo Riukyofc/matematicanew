@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { getTracks, getLessonsByTrack, getQuizzesByLessonId, getCompletedQuizIds, type Track, type Lesson } from "@/lib/firebase";
+import { getTracks, getLessonsByTrack, getQuizzesByLessonId, getCompletedQuizIds, getAnnouncements, type Track, type Lesson, type Announcement } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import DailyChallenge from "@/components/DailyChallenge";
 import StudyTimer from "@/components/StudyTimer";
@@ -34,6 +34,7 @@ export default function DashboardPage() {
   const { user, profile } = useAuth();
   const router = useRouter();
   const [tracks, setTracks] = useState<TrackWithLessons[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -42,8 +43,12 @@ export default function DashboardPage() {
     setLoading(true);
     setError("");
     try {
-      const allTracks = await getTracks();
-      const completedIds = await getCompletedQuizIds(user.uid);
+      const [allTracks, allAnnouncements, completedIds] = await Promise.all([
+        getTracks(),
+        getAnnouncements(),
+        getCompletedQuizIds(user.uid)
+      ]);
+      setAnnouncements(allAnnouncements);
       const result: TrackWithLessons[] = [];
       for (const track of allTracks) {
         const lessons = await getLessonsByTrack(track.id);
@@ -92,9 +97,9 @@ export default function DashboardPage() {
   return (
     <div className="space-y-5">
       {/* Greeting & Mascot */}
-      <div className="animate-fade-up flex items-center justify-between">
+      <div className="animate-slide-down flex items-center justify-between">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black" style={{ color: "var(--color-text)" }}>
+          <h1 className="text-2xl sm:text-3xl font-black animate-gradient-text" style={{ backgroundImage: "linear-gradient(45deg, var(--color-primary), var(--color-info))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", color: "transparent" }}>
             {greeting}, {firstName}! 👋
           </h1>
           <p className="text-sm font-semibold mt-0.5" style={{ color: "var(--color-text-muted)" }}>
@@ -110,7 +115,7 @@ export default function DashboardPage() {
       {nextLesson && (
         <button
           onClick={() => router.push(`/lesson/${nextLesson.id}`)}
-          className="w-full sm:w-auto btn-primary flex items-center justify-center gap-2 px-5 py-3 text-sm animate-fade-up"
+          className="w-full sm:w-auto btn-primary flex items-center justify-center gap-2 px-5 py-3 text-sm animate-bounce-in hover-scale"
           style={{ animationDelay: "0.05s" }}
         >
           ▶ Continuar: {nextLesson.title}
@@ -118,14 +123,14 @@ export default function DashboardPage() {
       )}
 
       {/* Stats Grid — 2x2 on mobile, 4 on desktop */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 animate-fade-up" style={{ animationDelay: "0.1s" }}>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 stagger-children" style={{ animationDelay: "0.1s" }}>
         {[
           { emoji: "⚡", label: "XP Total", value: xp, color: "var(--color-primary)" },
           { emoji: "🏆", label: "Nível", value: level, color: "var(--color-success)" },
           { emoji: "🪙", label: "Moedas", value: coins, color: "#d4a017" },
           { emoji: "📝", label: "Quizzes", value: quizzes, color: "var(--color-info)" },
         ].map((s) => (
-          <div key={s.label} className="card-flat p-3 text-center">
+          <div key={s.label} className="card-flat p-3 text-center hover-lift">
             <span className="text-xl">{s.emoji}</span>
             <p className="text-xl font-black mt-0.5" style={{ color: s.color }}>
               <AnimatedNum value={s.value} />
@@ -135,8 +140,28 @@ export default function DashboardPage() {
         ))}
       </div>
 
+      {/* Avisos / Announcements */}
+      {announcements.length > 0 && (
+        <div className="space-y-2 animate-slide-up" style={{ animationDelay: "0.12s" }}>
+          <h2 className="text-lg font-black flex items-center gap-2">
+            <span className="text-xl">📢</span> Avisos
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 stagger-children">
+            {announcements.map((ann) => (
+              <div 
+                key={ann.id} 
+                className={`card p-4 hover-lift ${ann.priority === 'urgent' ? 'border-[var(--color-error)] border-l-4' : ann.priority === 'warning' ? 'border-[var(--color-warning)] border-l-4' : 'border-[var(--color-info)] border-l-4'}`}
+              >
+                <h3 className="font-bold text-sm mb-1" style={{ color: ann.priority === 'urgent' ? 'var(--color-error)' : ann.priority === 'warning' ? 'var(--color-warning)' : 'var(--color-info)' }}>{ann.title}</h3>
+                <p className="text-xs font-semibold" style={{ color: "var(--color-text-muted)" }}>{ann.message}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Overall Progress */}
-      <div className="card p-4 animate-fade-up" style={{ animationDelay: "0.15s" }}>
+      <div className="card p-4 animate-slide-up hover-glow" style={{ animationDelay: "0.15s" }}>
         <div className="flex items-center justify-between mb-2">
           <p className="text-sm font-bold">📊 Progresso Geral</p>
           <span className="text-sm font-black" style={{ color: "var(--color-primary)" }}>{progress}%</span>
@@ -150,20 +175,20 @@ export default function DashboardPage() {
       </div>
 
       {/* Widgets Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="animate-fade-up" style={{ animationDelay: "0.2s" }}>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 stagger-children" style={{ animationDelay: "0.2s" }}>
+        <div className="hover-lift">
           <DailyChallenge />
         </div>
-        <div className="animate-fade-up" style={{ animationDelay: "0.25s" }}>
+        <div className="hover-lift">
           <StudyTimer />
         </div>
-        <div className="animate-fade-up" style={{ animationDelay: "0.3s" }}>
+        <div className="hover-lift">
           <MissionsWidget />
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 animate-fade-up" style={{ animationDelay: "0.3s" }}>
+      <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 stagger-children" style={{ animationDelay: "0.3s" }}>
         {[
           { emoji: "💪", label: "Prática", href: "/practice" },
           { emoji: "⚡", label: "Blitz", href: "/blitz" },
@@ -175,7 +200,7 @@ export default function DashboardPage() {
           <button
             key={a.label}
             onClick={() => router.push(a.href)}
-            className="card-flat p-3 text-center cursor-pointer transition-all hover:border-[var(--color-primary)]"
+            className="card-flat p-3 text-center cursor-pointer transition-all hover:border-[var(--color-primary)] hover-scale hover-lift"
             style={{ color: "var(--color-text-secondary)" }}
           >
             <span className="text-2xl">{a.emoji}</span>
@@ -216,7 +241,7 @@ export default function DashboardPage() {
         const tPct = Math.round((tDone / tTotal) * 100);
 
         return (
-          <div key={track.id} className="card overflow-hidden animate-fade-up" style={{ animationDelay: `${0.35 + ti * 0.08}s` }}>
+          <div key={track.id} className="card overflow-hidden animate-slide-up hover-lift" style={{ animationDelay: `${0.35 + ti * 0.08}s` }}>
             {/* Track Header */}
             <div className="p-4 flex items-center justify-between" style={{ borderBottom: "1px solid var(--color-divider)" }}>
               <div className="flex items-center gap-3">
@@ -242,9 +267,9 @@ export default function DashboardPage() {
             </div>
 
             {/* Lessons */}
-            <div className="p-3 space-y-1.5">
+            <div className="p-3 space-y-1.5 stagger-children">
               {track.lessons.map((lesson, li) => (
-                <div key={lesson.id} className="flex items-center gap-2.5 p-2.5 rounded-xl transition-colors" style={{ background: "var(--color-bg)" }}>
+                <div key={lesson.id} className="flex items-center gap-2.5 p-2.5 rounded-xl transition-colors hover-lift" style={{ background: "var(--color-bg)" }}>
                   {/* Step */}
                   {lesson.completed ? (
                     <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs" style={{ background: "var(--color-success-bg)", color: "var(--color-success)" }}>✓</div>

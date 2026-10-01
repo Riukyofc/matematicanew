@@ -66,16 +66,16 @@ export default function ArenaPlayer({ duel, onClose }: ArenaPlayerProps) {
   // Finished screen
   if (finished) {
     return (
-      <div className="max-w-sm mx-auto text-center py-12 animate-fade-up">
-        <p className="text-5xl mb-3">{isSubmitting ? "⚔️" : "🎯"}</p>
-        <h2 className="text-2xl font-black mb-2">
+      <div className="max-w-sm mx-auto text-center py-12 animate-bounce-in">
+        <p className="text-6xl mb-3 animate-wiggle">{isSubmitting ? "⚔️" : "🎯"}</p>
+        <h2 className="text-3xl font-black mb-2" style={{ color: "var(--color-primary)" }}>
           {isSubmitting ? "Calculando..." : "Duelo Concluído!"}
         </h2>
         
         {!isSubmitting && (
-          <div className="card p-6 mt-4">
+          <div className="card p-6 mt-4 stagger-children hover-lift">
             <p className="text-sm font-semibold mb-2" style={{ color: "var(--color-text-muted)" }}>Sua pontuação:</p>
-            <p className="text-5xl font-black mb-1" style={{ color: "var(--color-primary)" }}>{score}</p>
+            <p className="text-6xl font-black mb-1 animate-tada" style={{ color: "var(--color-primary)" }}>{score}</p>
             <p className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: "var(--color-text-muted)" }}>Pontos</p>
             
             <p className="text-xs mb-5 leading-relaxed" style={{ color: "var(--color-text-muted)" }}>
@@ -108,17 +108,24 @@ export default function ArenaPlayer({ duel, onClose }: ArenaPlayerProps) {
       </div>
 
       {/* Progress bar */}
-      <div className="progress-bar progress-bar-sm mb-5">
-        <div className="progress-fill" style={{ width: `${progress}%` }} />
+      <div className="progress-bar progress-bar-lg mb-5">
+        <div className="progress-fill progress-fill-streak" style={{ width: `${progress}%` }} />
       </div>
 
       {/* Question */}
-      <div className="card p-5 mb-4">
+      <div 
+        className={`card-game p-6 mb-5 transition-all duration-300 ${
+          showAnswer ? (selectedOption === currentQ.correctIndex ? 'border-4 scale-105 blitz-flash-correct' : 'border-4 animate-shake blitz-flash-wrong') : ''
+        }`}
+        style={{
+          borderColor: showAnswer ? (selectedOption === currentQ.correctIndex ? 'var(--color-success)' : 'var(--color-error)') : 'var(--color-border)'
+        }}
+      >
         <h3 className="text-xl font-bold text-center">{currentQ.text}</h3>
       </div>
       
       {/* Options */}
-      <div className="space-y-2.5">
+      <div className="space-y-3">
         {currentQ.options.map((opt, i) => {
           const isSelected = selectedOption === i;
           const isCorrect = i === currentQ.correctIndex;
@@ -138,7 +145,7 @@ export default function ArenaPlayer({ duel, onClose }: ArenaPlayerProps) {
               key={i}
               disabled={showAnswer}
               onClick={() => handleSelect(i)}
-              className="w-full p-3.5 rounded-xl text-left font-bold text-base transition-all cursor-pointer flex items-center gap-3"
+              className={`w-full p-4 rounded-xl text-left font-bold text-base transition-all cursor-pointer flex items-center gap-3 ${!showAnswer ? 'hover-scale hover:border-blue-300' : ''} ${showAnswer && isSelected && !isCorrect ? 'animate-shake' : ''}`}
               style={{ background: bg, border: `2px solid ${border}`, color }}
             >
               <span className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black shrink-0" style={{
@@ -155,7 +162,7 @@ export default function ArenaPlayer({ duel, onClose }: ArenaPlayerProps) {
 
       {/* Score */}
       <p className="text-center mt-4 text-xs font-bold" style={{ color: "var(--color-text-muted)" }}>
-        Pontuação: <span style={{ color: "var(--color-primary)" }}>{score}</span>
+        Pontuação: <span className="animate-pop-in inline-block font-black" style={{ color: "var(--color-primary)" }}>{score}</span>
       </p>
     </div>
   );

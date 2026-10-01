@@ -717,3 +717,127 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+/* ═══════════════════ ENHANCED ANIMATIONS v2 ═══════════════════ */
+
+/* Smooth page transitions */
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideLeft { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes slideRight { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+@keyframes scaleOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.9); } }
+@keyframes rotateIn { from { opacity: 0; transform: rotate(-10deg) scale(0.9); } to { opacity: 1; transform: rotate(0) scale(1); } }
+@keyframes bounceIn { 0% { opacity: 0; transform: scale(0.3); } 50% { transform: scale(1.05); } 70% { transform: scale(0.95); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes bounceOut { 0% { transform: scale(1); } 25% { transform: scale(0.95); } 50% { opacity: 1; transform: scale(1.1); } 100% { opacity: 0; transform: scale(0.3); } }
+@keyframes flipIn { from { opacity: 0; transform: perspective(400px) rotateY(90deg); } to { opacity: 1; transform: perspective(400px) rotateY(0); } }
+@keyframes wiggle { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-5deg); } 75% { transform: rotate(5deg); } }
+@keyframes heartbeat { 0%,100% { transform: scale(1); } 14% { transform: scale(1.15); } 28% { transform: scale(1); } 42% { transform: scale(1.15); } 70% { transform: scale(1); } }
+@keyframes tada { 0% { transform: scale(1); } 10%, 20% { transform: scale(0.95) rotate(-3deg); } 30%, 50%, 70%, 90% { transform: scale(1.1) rotate(3deg); } 40%, 60%, 80% { transform: scale(1.1) rotate(-3deg); } 100% { transform: scale(1) rotate(0); } }
+@keyframes rubberBand { 0% { transform: scale(1,1); } 30% { transform: scale(1.25,0.75); } 40% { transform: scale(0.75,1.25); } 50% { transform: scale(1.15,0.85); } 65% { transform: scale(0.95,1.05); } 75% { transform: scale(1.05,0.95); } 100% { transform: scale(1,1); } }
+@keyframes jello { 0%,100% { transform: none; } 11.1% { transform: skewX(-12.5deg) skewY(-12.5deg); } 22.2% { transform: skewX(6.25deg) skewY(6.25deg); } 33.3% { transform: skewX(-3.125deg) skewY(-3.125deg); } 44.4% { transform: skewX(1.5625deg) skewY(1.5625deg); } 55.5% { transform: skewX(-0.78deg) skewY(-0.78deg); } 66.6% { transform: skewX(0.39deg) skewY(0.39deg); } 77.7% { transform: skewX(-0.195deg) skewY(-0.195deg); } }
+
+/* Staggered children animation */
+.stagger-children > * { opacity: 0; animation: fadeUp 0.4s ease forwards; }
+.stagger-children > *:nth-child(1) { animation-delay: 0s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.06s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.12s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.18s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.24s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.30s; }
+.stagger-children > *:nth-child(7) { animation-delay: 0.36s; }
+.stagger-children > *:nth-child(8) { animation-delay: 0.42s; }
+.stagger-children > *:nth-child(9) { animation-delay: 0.48s; }
+.stagger-children > *:nth-child(10) { animation-delay: 0.54s; }
+
+/* Animation utility classes */
+.animate-slide-up { animation: slideUp 0.4s ease forwards; }
+.animate-slide-down { animation: slideDown 0.4s ease forwards; }
+.animate-slide-left { animation: slideLeft 0.4s ease forwards; }
+.animate-slide-right { animation: slideRight 0.4s ease forwards; }
+.animate-scale-in { animation: scaleIn 0.3s ease forwards; }
+.animate-bounce-in { animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards; }
+.animate-flip-in { animation: flipIn 0.5s ease forwards; }
+.animate-wiggle { animation: wiggle 0.5s ease; }
+.animate-heartbeat { animation: heartbeat 1.5s ease-in-out infinite; }
+.animate-tada { animation: tada 0.8s ease; }
+.animate-rubber { animation: rubberBand 0.8s ease; }
+.animate-jello { animation: jello 0.9s ease; }
+.animate-fade-down { animation: slideDown 0.4s ease forwards; }
+
+/* Hover micro-interactions */
+.hover-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.hover-lift:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+
+.hover-glow { transition: box-shadow 0.3s ease; }
+.hover-glow:hover { box-shadow: 0 0 20px var(--color-primary-glow); }
+
+.hover-scale { transition: transform 0.2s ease; }
+.hover-scale:hover { transform: scale(1.03); }
+
+.hover-tilt { transition: transform 0.2s ease; }
+.hover-tilt:hover { transform: perspective(500px) rotateY(5deg); }
+
+/* Smooth number counter animation */
+@keyframes countUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.animate-count { animation: countUp 0.5s ease forwards; }
+
+/* Gradient text animation */
+@keyframes gradientShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+.animate-gradient-text { background-size: 200% 200%; animation: gradientShift 3s ease infinite; }
+
+/* Loading dots */
+.loading-dots::after { content: ''; animation: dots 1.5s steps(4, end) infinite; }
+@keyframes dots { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; } }
+
+/* Success checkmark */
+@keyframes checkmark { 0% { stroke-dashoffset: 100; } 100% { stroke-dashoffset: 0; } }
+.animate-check { stroke-dasharray: 100; animation: checkmark 0.5s ease forwards; }
+
+/* Ripple effect */
+.ripple { position: relative; overflow: hidden; }
+.ripple::after { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at var(--ripple-x, 50%) var(--ripple-y, 50%), rgba(255,255,255,0.3) 0%, transparent 60%); transform: scale(0); transition: transform 0.5s ease; pointer-events: none; border-radius: inherit; }
+.ripple:active::after { transform: scale(2.5); transition: transform 0s; }
+
+/* Skeleton improved */
+.skeleton-text { height: 1em; border-radius: 4px; }
+.skeleton-avatar { width: 40px; height: 40px; border-radius: 50%; }
+.skeleton-card { height: 120px; border-radius: var(--radius-lg); }
+
+/* Announcement badge pulse */
+@keyframes announcePulse { 0%,100% { box-shadow: 0 0 0 0 rgba(108, 92, 231, 0.4); } 50% { box-shadow: 0 0 0 8px rgba(108, 92, 231, 0); } }
+.animate-announce-pulse { animation: announcePulse 2s ease-in-out infinite; }
+
+/* Progress bar shimmer effect */
+.progress-fill-shimmer { position: relative; overflow: hidden; }
+.progress-fill-shimmer::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%); animation: shimmer 2s infinite; }
+
+/* Mission card hover */
+.mission-card { transition: all 0.2s ease; }
+.mission-card:hover { transform: translateX(4px); border-color: var(--color-primary) !important; }
+
+/* Number flip */
+@keyframes numberFlip { 0% { opacity: 0; transform: translateY(-100%); } 100% { opacity: 1; transform: translateY(0); } }
+.animate-number-flip { animation: numberFlip 0.3s ease forwards; }
+
+/* Trophy spin for achievements */
+@keyframes trophySpin { 0% { transform: rotateY(0); } 100% { transform: rotateY(360deg); } }
+.animate-trophy { animation: trophySpin 1s ease-in-out; }
+
+/* Notification bell */
+@keyframes bellRing { 0% { transform: rotate(0); } 10% { transform: rotate(15deg); } 20% { transform: rotate(-15deg); } 30% { transform: rotate(10deg); } 40% { transform: rotate(-10deg); } 50% { transform: rotate(5deg); } 60% { transform: rotate(-5deg); } 70% { transform: rotate(0); } 100% { transform: rotate(0); } }
+.animate-bell { animation: bellRing 1s ease; }
+
+/* Smooth scrollbar for custom areas */
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 99px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
+
+/* Improved card interactions */
+.card-interactive { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+.card-interactive:hover { border-color: var(--color-primary); transform: translateY(-2px); box-shadow: 0 8px 25px -5px var(--color-primary-glow); }
+.card-interactive:active { transform: translateY(0); }
+
+/* Typing cursor */
+@keyframes blink { 0%,50% { border-color: var(--color-primary); } 51%,100% { border-color: transparent; } }
+.typing-cursor { border-right: 2px solid var(--color-primary); animation: blink 1s step-end infinite; padding-right: 2px; }

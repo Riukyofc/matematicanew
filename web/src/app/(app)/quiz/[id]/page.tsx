@@ -20,30 +20,18 @@ import Mascot from "@/components/Mascot";
 const Confetti = ({ active }: { active: boolean }) => {
   if (!active) return null;
   return (
-    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden flex justify-center items-center">
+    <div className="confetti-burst">
       {Array.from({ length: 40 }).map((_, i) => {
         const style = {
-          position: "absolute" as const,
-          width: Math.random() * 8 + 4 + "px",
-          height: Math.random() * 8 + 4 + "px",
           backgroundColor: ["var(--color-success)", "var(--color-primary)", "var(--color-warning)", "var(--color-info)"][Math.floor(Math.random() * 4)],
           left: "50%",
           top: "50%",
-          opacity: 1,
-          transform: `translate(-50%, -50%)`,
-          animation: `explode ${Math.random() * 1 + 0.5}s ease-out forwards`,
           "--tx": `${(Math.random() - 0.5) * 300}px`,
           "--ty": `${(Math.random() - 0.5) * 300}px`,
           "--r": `${Math.random() * 360}deg`
         } as React.CSSProperties;
-        return <div key={i} style={style} className="rounded-sm" />;
+        return <div key={i} style={style} className="confetti-particle" />;
       })}
-      <style>{`
-        @keyframes explode {
-          0% { transform: translate(-50%, -50%) rotate(0deg); opacity: 1; }
-          100% { transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) rotate(var(--r)); opacity: 0; }
-        }
-      `}</style>
     </div>
   );
 };
@@ -51,17 +39,10 @@ const Confetti = ({ active }: { active: boolean }) => {
 const FloatingXP = ({ amount, active }: { amount: number, active: boolean }) => {
   if (!active) return null;
   return (
-    <div className="absolute top-0 right-10 pointer-events-none z-40 animate-fade-up" style={{ animation: "float-up 1s ease-out forwards" }}>
+    <div className="float-xp right-10 top-0">
       <span className="font-black text-2xl" style={{ color: "var(--color-success)", textShadow: "0 2px 4px rgba(0,0,0,0.2)" }}>
         +{amount} XP
       </span>
-      <style>{`
-        @keyframes float-up {
-          0% { transform: translateY(0) scale(0.8); opacity: 0; }
-          20% { transform: translateY(-10px) scale(1.1); opacity: 1; }
-          100% { transform: translateY(-40px) scale(1); opacity: 0; }
-        }
-      `}</style>
     </div>
   );
 };
@@ -328,13 +309,9 @@ export default function QuizPage() {
             </div>
           )}
           
-          <div className="flex justify-center gap-4 mb-6">
+          <div className="star-container mb-6">
             {[1, 2, 3].map(s => (
-              <div key={s} className="text-6xl transition-all duration-700" style={{
-                opacity: s <= stars ? 1 : 0.3,
-                transform: s <= stars ? "scale(1.1) translateY(-10px)" : "scale(0.9)",
-                filter: s <= stars ? "drop-shadow(0 0 10px rgba(250, 204, 21, 0.6))" : "none"
-              }}>
+              <div key={s} className={`star-icon ${s <= stars ? 'earned' : 'empty'}`}>
                 ⭐
               </div>
             ))}
@@ -441,8 +418,8 @@ export default function QuizPage() {
           </div>
 
           {/* Circular Timer */}
-          <div className={`relative flex items-center justify-center w-14 h-14 ${isTimeLow ? 'animate-pulse' : ''}`}>
-            <svg className="w-full h-full transform -rotate-90">
+          <div className={`relative flex items-center justify-center w-14 h-14 ${isTimeLow ? 'timer-urgent' : ''}`}>
+            <svg className="w-full h-full transform -rotate-90 timer-circle">
               <circle cx="28" cy="28" r="20" fill="none" strokeWidth="4" stroke="var(--color-border)" />
               <circle cx="28" cy="28" r="20" fill="none" strokeWidth="4" stroke={timerColor}
                 strokeDasharray={circ} strokeDashoffset={dashoffset}
@@ -471,7 +448,7 @@ export default function QuizPage() {
           ))}
         </div>
         {streak > 1 && (
-          <div className="badge badge-primary animate-pop-in flex items-center gap-1 font-black text-sm px-3 py-1 shadow-md rounded-full border-2 border-[var(--color-primary)] bg-[var(--color-primary-bg)] text-[var(--color-primary)]">
+          <div className="combo-badge" style={{ color: "var(--color-primary)", backgroundColor: "var(--color-primary-bg)" }}>
             🔥 {comboMultiplier}x
           </div>
         )}
@@ -549,7 +526,7 @@ export default function QuizPage() {
                   onClick={() => !answered && setSel(idx)} 
                   disabled={answered}
                   className={`w-full flex items-center gap-4 p-4 sm:p-5 rounded-2xl border-2 text-left font-bold text-lg sm:text-xl transition-all duration-200 
-                    ${!answered && !isSelected ? "hover:border-blue-300" : ""} 
+                    ${!answered && !isSelected ? "hover:border-blue-300 hover-scale" : ""} 
                     ${!answered ? "cursor-pointer active:scale-[0.98]" : ""}
                     ${answered && isSelected && !isCorrectOpt ? "animate-shake" : ""}`}
                   style={btnStyle}
@@ -566,7 +543,7 @@ export default function QuizPage() {
 
         {/* Explanation Panel (Shows when wrong) */}
         {answered && !isCorrectSel && (
-          <div className="mt-4 p-6 rounded-2xl animate-fade-down shadow-md border-2" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-error)" }}>
+          <div className="explanation-panel mt-4 p-6 rounded-2xl shadow-md border-2" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-error)" }}>
             <h4 className="font-black text-lg flex items-center gap-2 mb-2" style={{ color: "var(--color-error)" }}>
               <span>✗</span> Resposta Incorreta
             </h4>
