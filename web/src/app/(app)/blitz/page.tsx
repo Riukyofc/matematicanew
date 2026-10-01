@@ -14,6 +14,7 @@ import {
 } from "@/lib/mathEngine";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { sounds } from "@/lib/soundEngine";
 
 type ScreenState = "start" | "countdown" | "game" | "result";
 
@@ -116,6 +117,7 @@ export default function BlitzPage() {
     const isCorrect = index === question.correctIndex;
     
     if (isCorrect) {
+      sounds.playCorrect();
       setFeedback("correct");
       const multiplier = getComboMultiplier(streak + 1);
       const pointsEarned = question.points * multiplier;
@@ -129,6 +131,7 @@ export default function BlitzPage() {
       setCorrectCount((prev) => prev + 1);
       setTimeLeft((prev) => prev + 1); // +1 second
     } else {
+      sounds.playWrong();
       setFeedback("wrong");
       setStreak(0);
       setWrongCount((prev) => prev + 1);

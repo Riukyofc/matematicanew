@@ -823,3 +823,47 @@ export async function getSiteConfig() {
 export async function saveSiteConfig(data: Record<string, unknown>) {
   await setDoc(doc(db, "settings", "siteConfig"), { ...data, updatedAt: serverTimestamp() }, { merge: true });
 }
+
+// ════════════════════ ARENA MATCHMAKING QUEUE ════════════════════
+export async function joinArenaQueue(uid: string, name: string): Promise<{ duelId?: string, waiting: true } | { duelId: string, waiting: false }> {
+  // Check if someone is already waiting
+  const q = query(collection(db, "arena_queue"), orderBy("joinedAt", "asc"), limit(1));
+  const snap = await getDocs(q);
+  
+  if (!snap.empty) {
+    const waitingPlayer = snap.docs[0];
+    const waitingData = waitingPlayer.data();
+    
+    // If it's not me
+    if (waitingData.uid !== uid) {
+      // Create a duel
+      const duelId = await createDuel(waitingData.uid, waitingData.name, uid, name);
+      
+      // Update the duel to "in_progress" immediately for matchmaking
+      await updateDoc(doc(db, "duels", duelId), { status: "in_progress" });
+      
+      // Remove the waiting player from queue
+      await deleteDoc(doc(db, "arena_queue", waitingPlayer.id));
+      
+      // We also update the waiting player's doc so they know the duel started
+      await setDoc(doc(db, "arena_queue_match", waitingData.uid), { duelId });
+      
+      return { duelId, waiting: false };
+    }
+  }
+
+  // Otherwise, add me to queue
+  await setDoc(doc(db, "arena_queue", uid), {
+    uid, name, joinedAt: serverTimestamp()
+  });
+  
+  return { waiting: true };
+}
+
+export async function leaveArenaQueue(uid: string) {
+  try {
+    await deleteDoc(doc(db, "arena_queue", uid));
+  } catch (e) {
+    // Ignore
+  }
+}

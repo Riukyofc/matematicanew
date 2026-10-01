@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Duel, submitDuelResult } from "@/lib/firebase";
+import { sounds } from "@/lib/soundEngine";
 
 interface ArenaPlayerProps {
   duel: Duel;
@@ -34,7 +35,12 @@ export default function ArenaPlayer({ duel, onClose }: ArenaPlayerProps) {
     setShowAnswer(true);
 
     const isCorrect = idx === currentQ.correctIndex;
-    if (isCorrect) setScore(s => s + 10);
+    if (isCorrect) {
+      sounds.playCorrect();
+      setScore(s => s + 10);
+    } else {
+      sounds.playWrong();
+    }
 
     setTimeout(() => {
       if (currentIdx < questions.length - 1) {

@@ -2,26 +2,24 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { getDuelsForUser, createDuel, getAllStudents, Duel } from "@/lib/firebase";
+import { getDuelsForUser, joinArenaQueue, leaveArenaQueue, Duel, getAllStudents } from "@/lib/firebase";
 import ArenaPlayer from "@/components/arena/ArenaPlayer";
 import { useToast } from "@/components/Toast";
-
-interface Student {
-  uid: string;
-  name?: string;
-  level?: number;
-}
+import { sounds } from "@/lib/soundEngine";
+import { doc, onSnapshot } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export default function ArenaPage() {
   const { user, profile } = useAuth();
   const { addToast } = useToast();
   const [duels, setDuels] = useState<Duel[]>([]);
-  const [students, setStudents] = useState<Student[]>([]);
+  const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeDuel, setActiveDuel] = useState<Duel | null>(null);
-  const [showChallengeModal, setShowChallengeModal] = useState(false);
-  const [challengeLoading, setChallengeLoading] = useState(false);
-  const [searchStudent, setSearchStudent] = useState("");
+  
+  // Fila
+  const [inQueue, setInQueue] = useState(false);
+  const [queueTimer, setQueueTimer] = useState(0);
 
   const loadData = useCallback(async () => {
     if (!user) return;
@@ -32,7 +30,7 @@ export default function ArenaPage() {
         getAllStudents()
       ]);
       setDuels(userDuels);
-      setStudents(allStudents.filter(s => s.uid !== user.uid));
+      setStudents(allStudents);
     } catch (err) {
       console.error(err);
     }
@@ -43,26 +41,82 @@ export default function ArenaPage() {
     loadData();
   }, [loadData]);
 
+  // Listener para quando estiver na fila
+  useEffect(() => {
+    if (!inQueue || !user) return;
+    
+    let interval = setInterval(() => setQueueTimer(t => t + 1), 1000);
+    
+    // Escuta no documento de arena_queue_match para ver se fomos escolhidos
+    const unsub = onSnapshot(doc(db, "arena_queue_match", user.uid), async (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.duelId) {
+          sounds.playWin();
+          addToast("success", "⚔️ Oponente encontrado!");
+          setInQueue(false);
+          await loadData();
+          
+          // Achar o duelo novo
+          setTimeout(async () => {
+             const userDuels = await getDuelsForUser(user.uid);
+             const newDuel = userDuels.find(d => d.id === data.duelId);
+             if (newDuel) setActiveDuel(newDuel);
+          }, 500);
+        }
+      }
+    });
+
+    return () => {
+      clearInterval(interval);
+      unsub();
+    };
+  }, [inQueue, user, addToast, loadData]);
+
+  // Cleanup na saída
+  useEffect(() => {
+    return () => {
+      if (inQueue && user) {
+        leaveArenaQueue(user.uid);
+      }
+    };
+  }, [inQueue, user]);
+
   if (!user || !profile) return null;
 
   if (activeDuel) {
     return <ArenaPlayer duel={activeDuel} onClose={() => { setActiveDuel(null); loadData(); }} />;
   }
 
-  const handleChallenge = async (opponentId: string) => {
-    setChallengeLoading(true);
+  const handleJoinQueue = async () => {
+    sounds.playClick();
+    setInQueue(true);
+    setQueueTimer(0);
     try {
-      const oppName = students.find(s => s.uid === opponentId)?.name || "Oponente";
       const myName = user.displayName || profile.name || "Você";
-      await createDuel(user.uid, myName as string, opponentId, oppName);
-      setShowChallengeModal(false);
-      addToast("success", `⚔️ Duelo criado contra ${oppName}!`);
-      loadData();
+      const result = await joinArenaQueue(user.uid, myName);
+      
+      if (!result.waiting && result.duelId) {
+        // Já achou alguém logo de cara
+        sounds.playWin();
+        addToast("success", "⚔️ Oponente encontrado imediatamente!");
+        setInQueue(false);
+        await loadData();
+        const userDuels = await getDuelsForUser(user.uid);
+        const newDuel = userDuels.find(d => d.id === result.duelId);
+        if (newDuel) setActiveDuel(newDuel);
+      }
     } catch (err) {
-      console.error("Erro ao criar duelo", err);
-      addToast("error", "Erro ao criar duelo");
+      console.error(err);
+      addToast("error", "Erro ao entrar na fila");
+      setInQueue(false);
     }
-    setChallengeLoading(false);
+  };
+
+  const handleCancelQueue = async () => {
+    sounds.playClick();
+    setInQueue(false);
+    await leaveArenaQueue(user.uid);
   };
 
   const pendingDuels = duels.filter(d => d.status === "pending" || d.status === "in_progress");
@@ -85,85 +139,80 @@ export default function ArenaPage() {
   const duelsLost = Number(profile.duelsLost) || 0;
   const winRate = duelsPlayed > 0 ? Math.round((duelsWon / duelsPlayed) * 100) : 0;
 
-  const filteredStudents = students.filter(s => 
-    !searchStudent.trim() || (s.name || "").toLowerCase().includes(searchStudent.toLowerCase())
-  );
-
   return (
-    <div className="max-w-5xl mx-auto space-y-5 animate-fade-up">
+    <div className="max-w-5xl mx-auto space-y-6 animate-fade-up">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <span className="text-3xl">⚔️</span>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <span className="text-4xl animate-bounce-in">⚔️</span>
           <div>
-            <h1 className="text-2xl font-black">Arena</h1>
-            <p className="text-sm font-semibold" style={{ color: "var(--color-text-muted)" }}>Desafie alunos e ganhe XP!</p>
+            <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">Arena</h1>
+            <p className="text-sm font-semibold" style={{ color: "var(--color-text-muted)" }}>Desafie alunos online e ganhe recompensas!</p>
           </div>
         </div>
-        <button
-          onClick={() => setShowChallengeModal(true)}
-          className="btn-primary flex items-center justify-center gap-2 px-5 py-2.5 text-sm"
-        >
-          ⚡ Desafiar
-        </button>
+        
+        {inQueue ? (
+          <button onClick={handleCancelQueue} className="btn-primary hover-scale px-6 py-3 rounded-full flex items-center justify-center gap-2" style={{ background: "var(--color-error)" }}>
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            Buscando Oponente ({queueTimer}s)
+          </button>
+        ) : (
+          <button onClick={handleJoinQueue} className="btn-primary hover-scale hover-glow px-6 py-3 rounded-full flex items-center justify-center gap-2">
+            <span>🎮</span> Procurar Partida
+          </button>
+        )}
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 stagger-children">
         {[
-          { label: "Jogados", value: duelsPlayed, emoji: "🎮" },
-          { label: "Vitórias", value: duelsWon, emoji: "🏆" },
-          { label: "Derrotas", value: duelsLost, emoji: "💔" },
-          { label: "Win Rate", value: `${winRate}%`, emoji: "📊" },
-          { label: "Moedas", value: Number(profile.coins) || 0, emoji: "🪙" },
-        ].map((s) => (
-          <div key={s.label} className="card-flat p-3 text-center">
-            <span className="text-base">{s.emoji}</span>
-            <p className="text-lg font-black" style={{ color: "var(--color-text)" }}>{s.value}</p>
-            <p className="text-[9px] font-bold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{s.label}</p>
+          { label: "Vitórias", value: duelsWon, icon: "🏆", color: "text-amber-500" },
+          { label: "Derrotas", value: duelsLost, icon: "💀", color: "text-red-500" },
+          { label: "Total Jogado", value: duelsPlayed, icon: "⚔️", color: "text-indigo-500" },
+          { label: "Taxa de Vitória", value: `${winRate}%`, icon: "📈", color: "text-emerald-500" }
+        ].map((stat, i) => (
+          <div key={i} className="card p-4 hover-lift">
+            <div className="flex items-center justify-between mb-1">
+              <span className={`text-xl ${stat.color}`}>{stat.icon}</span>
+              <p className="text-2xl font-black">{stat.value}</p>
+            </div>
+            <p className="text-[10px] font-bold text-right uppercase" style={{ color: "var(--color-text-muted)" }}>{stat.label}</p>
           </div>
         ))}
       </div>
 
-      {loading ? (
-        <div className="space-y-4">
-          {[...Array(2)].map((_, i) => <div key={i} className="h-40 skeleton" />)}
-        </div>
-      ) : (
-        <div className="grid md:grid-cols-2 gap-4 animate-fade-up" style={{ animationDelay: "0.1s" }}>
+      {/* Active Duels */}
+      {!loading && pendingDuels.length > 0 && (
+        <div className="grid md:grid-cols-2 gap-6">
           {/* My Turn */}
-          <div className="card p-4" style={{ borderTop: "3px solid var(--color-success)" }}>
-            <h2 className="text-base font-black mb-3 flex items-center gap-2">
-              ▶️ Sua Vez
-              {myTurnDuels.length > 0 && <span className="badge badge-success text-[9px]">{myTurnDuels.length}</span>}
+          <div className="card p-5" style={{ borderTop: "3px solid var(--color-success)" }}>
+            <h2 className="text-lg font-black mb-4 flex items-center gap-2">
+              Sua Vez de Jogar
+              {myTurnDuels.length > 0 && <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-500">{myTurnDuels.length}</span>}
             </h2>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {myTurnDuels.length === 0 ? (
-                <div className="text-center py-6">
-                  <p className="text-2xl mb-1">😴</p>
-                  <p className="text-sm font-semibold" style={{ color: "var(--color-text-muted)" }}>Nenhum duelo pendente</p>
+                <div className="text-center py-8 opacity-50">
+                  <p className="text-3xl mb-2">😴</p>
+                  <p className="text-sm font-bold">Nenhum duelo esperando você</p>
                 </div>
               ) : (
                 myTurnDuels.map(duel => {
                   const opponent = duel.challengerId === user.uid ? duel.opponentId : duel.challengerId;
-                  const oppName = students.find(s => s.uid === opponent)?.name || 
-                                  (duel.challengerId === user.uid ? "Oponente" : "Desafiante");
+                  const oppName = students.find(s => s.uid === opponent)?.name || "Oponente";
                   return (
-                    <div key={duel.id} className="flex items-center justify-between p-3 rounded-xl" style={{ background: "var(--color-bg)", border: "2px solid var(--color-success)" }}>
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ background: "var(--color-error)" }}>
+                    <div key={duel.id} className="flex items-center justify-between p-4 rounded-xl border-2 border-[var(--color-success)] bg-[var(--color-bg)] hover-lift">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-sm bg-rose-500 shadow-md">
                           {oppName.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <p className="font-bold text-sm">vs {oppName}</p>
-                          <p className="text-[10px] font-semibold" style={{ color: "var(--color-text-muted)" }}>🪙 {duel.coinsReward} moedas</p>
+                          <p className="font-black text-sm">vs {oppName}</p>
+                          <p className="text-xs font-bold" style={{ color: "var(--color-text-muted)" }}>💰 {duel.coinsReward} moedas</p>
                         </div>
                       </div>
-                      <button 
-                        onClick={() => setActiveDuel(duel)} 
-                        className="btn-primary px-3 py-1.5 text-xs"
-                      >
-                        Jogar ⚡
+                      <button onClick={() => { sounds.playClick(); setActiveDuel(duel); }} className="btn-primary px-4 py-2 text-xs hover-scale">
+                        Jogar ⚔️
                       </button>
                     </div>
                   );
@@ -173,29 +222,29 @@ export default function ArenaPage() {
           </div>
 
           {/* Waiting for Opponent */}
-          <div className="card p-4" style={{ borderTop: "3px solid var(--color-warning)" }}>
-            <h2 className="text-base font-black mb-3 flex items-center gap-2">
-              ⏳ Aguardando
-              {waitingForOpponent.length > 0 && <span className="badge badge-warning text-[9px]">{waitingForOpponent.length}</span>}
+          <div className="card p-5" style={{ borderTop: "3px solid var(--color-warning)" }}>
+            <h2 className="text-lg font-black mb-4 flex items-center gap-2">
+              Aguardando Oponente
+              {waitingForOpponent.length > 0 && <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-500">{waitingForOpponent.length}</span>}
             </h2>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {waitingForOpponent.length === 0 ? (
-                <div className="text-center py-6">
-                  <p className="text-2xl mb-1">✅</p>
-                  <p className="text-sm font-semibold" style={{ color: "var(--color-text-muted)" }}>Nenhum duelo na espera</p>
+                <div className="text-center py-8 opacity-50">
+                  <p className="text-3xl mb-2">👀</p>
+                  <p className="text-sm font-bold">Nenhum duelo na espera</p>
                 </div>
               ) : (
                 waitingForOpponent.map(duel => {
                   const opponent = duel.challengerId === user.uid ? duel.opponentId : duel.challengerId;
                   const oppName = students.find(s => s.uid === opponent)?.name || "Oponente";
                   return (
-                    <div key={duel.id} className="flex items-center gap-2.5 p-3 rounded-xl" style={{ background: "var(--color-bg)", border: "2px dashed var(--color-warning)" }}>
-                      <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ background: "var(--color-warning)" }}>
+                    <div key={duel.id} className="flex items-center gap-3 p-4 rounded-xl border-2 border-dashed border-[var(--color-warning)] bg-[var(--color-bg)] opacity-75">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-sm bg-amber-500">
                         {oppName.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <p className="font-bold text-sm">Aguardando {oppName}</p>
-                        <p className="text-[10px] font-semibold" style={{ color: "var(--color-text-muted)" }}>Você já jogou ✓</p>
+                        <p className="font-black text-sm">Aguardando {oppName}</p>
+                        <p className="text-xs font-bold" style={{ color: "var(--color-text-muted)" }}>Você já jogou</p>
                       </div>
                     </div>
                   );
@@ -212,82 +261,35 @@ export default function ArenaPage() {
           <h2 className="text-xl font-black mb-4 flex items-center gap-2">
             <span>📜</span> Histórico de Batalhas
           </h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {completedDuels.slice(0, 6).map((duel, i) => {
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger-children">
+            {completedDuels.slice(0, 9).map((duel, i) => {
               const iWon = duel.winnerId === user.uid;
               const isDraw = !duel.winnerId;
               const opponent = duel.challengerId === user.uid ? duel.opponentId : duel.challengerId;
               const oppName = students.find(s => s.uid === opponent)?.name || "Oponente";
               
+              const borderCol = iWon ? "border-emerald-500" : isDraw ? "border-amber-500" : "border-rose-500";
+              const bgCol = iWon ? "bg-emerald-500" : isDraw ? "bg-amber-500" : "bg-rose-500";
+              
               return (
-                <div key={duel.id} className="card-flat p-3 animate-fade-up" style={{ animationDelay: `${0.15 + i * 0.04}s`, borderLeft: `3px solid ${iWon ? "var(--color-success)" : isDraw ? "var(--color-warning)" : "var(--color-error)"}` }}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className={`badge ${iWon ? "badge-success" : isDraw ? "badge-warning" : "badge-error"}`}>
+                <div key={duel.id} className={`card p-4 border-l-4 ${borderCol} hover-lift`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className={`px-2 py-1 rounded text-[9px] font-black text-white ${bgCol}`}>
                       {iWon ? "VITÓRIA" : isDraw ? "EMPATE" : "DERROTA"}
                     </span>
-                    {iWon && <span className="text-xs font-bold" style={{ color: "#d4a017" }}>+{duel.coinsReward} 🪙</span>}
+                    {iWon && <span className="text-xs font-black text-amber-500 animate-pulse">+{duel.coinsReward} 💰</span>}
                   </div>
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs" style={{ background: iWon ? "var(--color-success)" : isDraw ? "var(--color-warning)" : "var(--color-error)" }}>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs ${bgCol}`}>
                       {oppName.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <p className="text-sm font-bold">vs {oppName}</p>
-                      <p className="text-[10px] font-semibold" style={{ color: "var(--color-text-muted)" }}>🪙 {duel.coinsReward}</p>
+                      <p className="text-sm font-black">vs {oppName}</p>
                     </div>
                   </div>
                 </div>
               );
             })}
-          </div>
-        </div>
-      )}
-
-      {/* Challenge Modal */}
-      {showChallengeModal && (
-        <div className="modal-backdrop" onClick={() => setShowChallengeModal(false)}>
-          <div className="card p-5 w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col modal-content" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4 shrink-0">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">⚔️</span>
-                <h3 className="text-lg font-black">Escolher Oponente</h3>
-              </div>
-              <button onClick={() => setShowChallengeModal(false)} className="p-1.5 rounded-lg cursor-pointer text-lg" style={{ color: "var(--color-text-muted)" }}>✕</button>
-            </div>
-
-            <input
-              value={searchStudent}
-              onChange={e => setSearchStudent(e.target.value)}
-              placeholder="Buscar aluno..."
-              className="input-clean mb-3 shrink-0"
-            />
-            
-            <div className="flex-1 overflow-y-auto space-y-2">
-              {filteredStudents.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-2xl mb-1">🔍</p>
-                  <p className="text-sm font-semibold" style={{ color: "var(--color-text-muted)" }}>Nenhum aluno encontrado</p>
-                </div>
-              ) : (
-                filteredStudents.map(student => (
-                  <div key={student.uid} className="flex items-center justify-between p-3 rounded-xl" style={{ background: "var(--color-bg)", border: "1px solid var(--color-border)" }}>
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs" style={{ background: "var(--color-primary)" }}>
-                        {(student.name || "?").charAt(0).toUpperCase()}
-                      </div>
-                      <span className="font-bold text-sm">{student.name}</span>
-                    </div>
-                    <button
-                      disabled={challengeLoading}
-                      onClick={() => handleChallenge(student.uid)}
-                      className="btn-primary px-3 py-1.5 text-xs disabled:opacity-50"
-                    >
-                      ⚔️ Desafiar
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
           </div>
         </div>
       )}

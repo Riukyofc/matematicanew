@@ -14,6 +14,7 @@ import {
 } from "@/lib/firebase";
 import { getComboMultiplier, calculatePoints, getStars } from "@/lib/mathEngine";
 import Mascot from "@/components/Mascot";
+import { sounds } from "@/lib/soundEngine";
 
 // --- Confetti & Animation Helpers ---
 
@@ -233,6 +234,7 @@ export default function QuizPage() {
     setAnswered(true);
     
     if (isCorrect) {
+      sounds.playCorrect();
       const newStreak = streak + 1;
       setStreak(newStreak);
       setMaxStreak(Math.max(maxStreak, newStreak));
@@ -248,6 +250,7 @@ export default function QuizPage() {
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 2000);
     } else {
+      sounds.playWrong();
       setStreak(0);
       setComboMultiplier(1);
     }
