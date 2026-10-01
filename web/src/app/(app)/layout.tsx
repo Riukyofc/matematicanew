@@ -109,9 +109,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         {/* Logo */}
         <div className="flex items-center justify-between px-4 py-4" style={{ borderBottom: "1px solid var(--color-border)" }}>
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-black" style={{ background: "var(--color-primary)" }}>
-              S
-            </div>
+            <img src="/logo.jpg" alt="Saberes em Conexão Logo" className="w-10 h-10 rounded-full object-cover shadow-sm bg-white" />
             <div>
               <p className="text-sm font-extrabold leading-tight" style={{ color: "var(--color-text)" }}>Saberes</p>
               <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color: "var(--color-text-muted)" }}>em Conexão</p>

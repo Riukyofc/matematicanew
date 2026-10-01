@@ -74,9 +74,7 @@ export default function LoginScreen() {
       <div className="w-full max-w-sm animate-fade-up">
         {/* Logo */}
         <div className="text-center mb-6">
-          <div className="w-16 h-16 rounded-2xl mx-auto mb-3 flex items-center justify-center text-white text-2xl font-black" style={{ background: "var(--color-primary)" }}>
-            S
-          </div>
+          <img src="/logo.jpg" alt="Saberes em Conexão" className="w-20 h-20 rounded-full mx-auto mb-3 object-cover shadow-md bg-white border border-[var(--color-border)]" />
           <h1 className="text-2xl font-black">Saberes em Conexão</h1>
           <p className="text-xs font-bold mt-1 uppercase tracking-widest" style={{ color: "var(--color-text-muted)" }}>Conhecer • Conectar • Transformar</p>
         </div>
